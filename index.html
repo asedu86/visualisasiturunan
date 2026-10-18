@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Visualisasi Turunan</title>
+<style>
+:root{--bg:#eef1f6;--card:#fff;--tx:#1b2433;--mut:#6b7587;--bd:#d9dfea;--ac:#2563eb;--c2:#e11d48;--c3:#059669;--grid:#e6eaf2;--axis:#8a94a8;box-sizing:border-box}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d1117;--card:#161b24;--tx:#e6ebf4;--mut:#93a0b5;--bd:#273041;--ac:#60a5fa;--c2:#fb7185;--c3:#34d399;--grid:#212a3a;--axis:#66728a}}
+*{box-sizing:border-box}html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+body{display:flex;align-items:center;justify-content:center}
+#app{container-type:size;width:min(100vw,calc(100vh*16/9));aspect-ratio:16/9;display:grid;grid-template-columns:29fr 71fr;gap:1.2cqw;padding:1.2cqw}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:1cqw;padding:1.4cqw;min-height:0}
+#in{display:flex;flex-direction:column;gap:1.1cqw;font-size:1.05cqw}
+h1{font-size:1.6cqw;margin:0}.sub{color:var(--mut);margin-top:-.6cqw}
+label{display:block;font-weight:600;margin-bottom:.4cqw}
+input[type=text],input[type=number]{width:100%;font-size:1.4cqw;padding:.7cqw .9cqw;border:1px solid var(--bd);border-radius:.6cqw;background:var(--bg);color:var(--tx);font-family:ui-monospace,Consolas,monospace}
+input:focus{outline:2px solid var(--ac)}
+.err{color:var(--c2);min-height:1.3cqw}
+.chips{display:flex;flex-wrap:wrap;gap:.4cqw}.chips button{font-size:.95cqw;padding:.3cqw .7cqw;border:1px solid var(--bd);background:var(--bg);color:var(--tx);border-radius:2cqw;cursor:pointer}
+.chips button:hover{border-color:var(--ac)}
+.stat{display:grid;gap:.5cqw;margin-top:auto}
+.row{display:flex;justify-content:space-between;align-items:baseline;padding:.6cqw .9cqw;background:var(--bg);border-radius:.6cqw}
+.row b{font-family:ui-monospace,Consolas,monospace;font-size:1.3cqw}
+#vis{display:flex;flex-direction:column;gap:.8cqw;padding:1cqw}
+#cw{position:relative;flex:1;min-height:0}
+#cv{position:absolute;inset:0;width:100%;height:100%;border-radius:.6cqw;cursor:grab;touch-action:none}
+#zb{position:absolute;top:.7cqw;right:.7cqw;display:flex;gap:.4cqw}
+.btn{width:2.6cqw;height:2.6cqw;font-size:1.5cqw;line-height:1;border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:.6cqw;cursor:pointer;box-shadow:0 1px 4px #0002}
+.btn:hover{border-color:var(--ac);color:var(--ac)}
+#pan{display:flex;align-items:center;gap:1cqw;font-size:1.05cqw;color:var(--mut)}
+#pan input{flex:1;accent-color:var(--ac);height:1.6cqw}
+#pan button{font-size:1cqw;padding:.3cqw .8cqw;border:1px solid var(--bd);background:var(--bg);color:var(--tx);border-radius:2cqw;cursor:pointer}
+#sl{display:flex;align-items:center;gap:1.2cqw;font-size:1.1cqw}
+#sl input{flex:1;accent-color:var(--c2);height:2cqw}
+#hv{font-family:ui-monospace,Consolas,monospace;min-width:14cqw;text-align:right;font-weight:600}
+.leg{display:flex;gap:1.4cqw;font-size:.95cqw;color:var(--mut)}.leg i{display:inline-block;width:1.4cqw;height:.3cqw;vertical-align:middle;margin-right:.4cqw;border-radius:2px}
+</style></head><body>
+<div id="app">
+<section id="in" class="card">
+<h1>Visualisasi Turunan</h1><div class="sub">Dari garis sekan menuju garis singgung</div>
+<div><label for="fx">Fungsi f(x)</label><input id="fx" type="text" value="x^2" spellcheck="false" autocomplete="off"></div>
+<div class="chips" id="chips"></div>
+<div><label for="x0">Titik x₀</label><input id="x0" type="number" value="1" step="0.1"></div>
+<div class="err" id="err"></div>
+<div class="stat">
+<div class="row"><span>Titik P (x₀, f(x₀))</span><b id="sP"></b></div>
+<div class="row"><span>Titik Q (x₀+h, f(x₀+h))</span><b id="sQ"></b></div>
+<div class="row"><span style="color:var(--c2)">Gradien PQ</span><b id="sM"></b></div>
+<div class="row"><span style="color:var(--c3)">f’(x₀) ≈ gradien singgung</span><b id="sD"></b></div>
+</div>
+</section>
+<section id="vis" class="card">
+<div id="pan"><span>◀ Geser kiri</span><input id="pn" type="range" min="-6" max="6" step="0.1" value="0"><span>Geser kanan ▶</span><button id="rs">Reset tampilan</button></div>
+<div id="cw"><canvas id="cv"></canvas><div id="zb"><button class="btn" id="zo" title="Perkecil">−</button><button class="btn" id="zi" title="Perbesar">+</button></div></div>
+<div class="leg"><span><i style="background:var(--ac)"></i>f(x)</span><span><i style="background:var(--c2)"></i>garis PQ</span><span><i style="background:var(--c3)"></i>garis singgung di P</span><span>Skala sumbu x dan y sama (1 : 1)</span></div>
+<div id="sl"><span>Geser titik Q: h =</span><input id="h" type="range" min="-1.5" max="1.5" step="0.1" value="1.5"><span id="hv"></span></div>
+</section></div>
+<script>
+const $=id=>document.getElementById(id),cv=$('cv'),ctx=cv.getContext('2d');
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+['x^2','x^3-3x','sin(x)','1/x','sqrt(x)','e^x'].forEach(s=>{const b=document.createElement('button');b.textContent=s;b.onclick=()=>{$('fx').value=s;draw()};$('chips').appendChild(b)});
+/* Parser fungsi (mandiri, tanpa pustaka luar) */
+const FN={sin:Math.sin,cos:Math.cos,tan:Math.tan,asin:Math.asin,acos:Math.acos,atan:Math.atan,sinh:Math.sinh,cosh:Math.cosh,tanh:Math.tanh,exp:Math.exp,ln:Math.log,log:Math.log10,sqrt:Math.sqrt,cbrt:Math.cbrt,abs:Math.abs};
+const NAMES=[...Object.keys(FN),'pi','x','e'].sort((a,b)=>b.length-a.length);
+function parse(src){
+let s=src.toLowerCase().replace(/π/g,'pi').replace(/\s+/g,''),i=0;if(!s)throw 0;
+const peek=()=>s[i];
+function expr(){let a=term();while(peek()==='+'||peek()==='-'){const o=s[i++],b=term(),l=a;a=o==='+'?x=>l(x)+b(x):x=>l(x)-b(x)}return a}
+function term(){let a=unary();for(;;){const c=peek();let o='*';if(c==='*'||c==='/'){o=c;i++}else if(!(c&&(/[0-9.a-zπ(]/.test(c))))break;const b=unary(),l=a;a=o==='*'?x=>l(x)*b(x):x=>l(x)/b(x)}return a}
+function unary(){if(peek()==='-'){i++;const a=unary();return x=>-a(x)}if(peek()==='+'){i++;return unary()}return power()}
+function power(){const a=atom();if(peek()==='^'){i++;const b=unary();return x=>Math.pow(a(x),b(x))}return a}
+function atom(){const c=peek();
+if(c==='('){i++;const a=expr();if(s[i++]!==')')throw 0;return a}
+const m=/^(\d+\.?\d*|\.\d+)/.exec(s.slice(i));if(m){i+=m[0].length;const v=parseFloat(m[0]);return()=>v}
+const n=NAMES.find(k=>s.startsWith(k,i));if(!n)throw 0;i+=n.length;
+if(n==='x')return x=>x;if(n==='e')return()=>Math.E;if(n==='pi')return()=>Math.PI;
+if(s[i]!=='(')throw 0;i++;const a=expr();if(s[i++]!==')')throw 0;const f=FN[n];return x=>f(a(x))}
+const r=expr();if(i<s.length)throw 0;return x=>{const v=r(x);return isFinite(v)?v:NaN}}
+let F=null,zoom=1,panY=0;
+function compile(){try{const f=parse($('fx').value);f(1);$('err').textContent='';return f}catch{$('err').textContent='Fungsi tidak valid. Contoh: x^2, sin(x), 2x+1';return null}}
+function nice(r){const p=Math.pow(10,Math.floor(Math.log10(r))),n=r/p;return(n<1.5?1:n<3.5?2:n<7.5?5:10)*p}
+const fmt=v=>Number.isFinite(v)?(+v.toFixed(4)).toString():'tak terdefinisi';
+function draw(){
+const f=compile();if(f)F=f;else if(!F)return;
+const g=F,x0=parseFloat($('x0').value),h=Math.round(parseFloat($('h').value)*10)/10;
+if(!isFinite(x0))return;
+const x1=x0+h,y0=g(x0),y1=g(x1);
+$('hv').textContent=(h>=0?'+':'')+h.toFixed(1)+'  (x₁='+fmt(x1)+')';
+const e=1e-6,d=(g(x0+e)-g(x0-e))/(2*e),m=h===0?NaN:(y1-y0)/h;
+$('sP').textContent='('+fmt(x0)+', '+fmt(y0)+')';
+$('sQ').textContent='('+fmt(x1)+', '+fmt(y1)+')';
+$('sM').textContent=h===0?'h = 0':fmt(m);$('sD').textContent=fmt(d);
+const r=cv.getBoundingClientRect(),dpr=devicePixelRatio||1;cv.width=r.width*dpr;cv.height=r.height*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);
+const W=r.width,H=r.height,P=34;
+/* Fokus ke rentang slider: x0 ± 1,5 */
+const R=1.5,vs=[];for(let i=0;i<=120;i++){const v=g(x0-R+2*R*i/120);if(isFinite(v))vs.push(v)}
+vs.sort((a,b)=>a-b);let lo=vs.length?vs[Math.floor(vs.length*.03)]:-1,hi=vs.length?vs[Math.floor(vs.length*.97)]:1;
+if(isFinite(y0)){lo=Math.min(lo,y0);hi=Math.max(hi,y0)}
+const Rx=2*R*1.25,Ry=Math.max(hi-lo,.5)*1.25;
+const sc=zoom*Math.min((W-2*P)/Rx,(H-2*P)/Ry); /* px per satuan, sama untuk x dan y */
+const pn=parseFloat($('pn').value)||0,cx=x0+pn,cy=(hi+lo)/2+panY;
+cv._sc=sc;const X=x=>W/2+(x-cx)*sc,Y=y=>H/2-(y-cy)*sc;
+const xa=cx-W/2/sc,xb=cx+W/2/sc,ya=cy-H/2/sc,yb=cy+H/2/sc;
+ctx.clearRect(0,0,W,H);ctx.font='12px system-ui';
+const st=nice((xb-xa)/9);
+ctx.lineWidth=1;ctx.strokeStyle=css('--grid');
+for(let x=Math.ceil(xa/st)*st;x<=xb;x+=st){ctx.beginPath();ctx.moveTo(X(x),0);ctx.lineTo(X(x),H);ctx.stroke()}
+for(let y=Math.ceil(ya/st)*st;y<=yb;y+=st){ctx.beginPath();ctx.moveTo(0,Y(y));ctx.lineTo(W,Y(y));ctx.stroke()}
+const ax=Math.min(Math.max(X(0),28),W-8),ay=Math.min(Math.max(Y(0),8),H-22);
+ctx.strokeStyle=css('--axis');ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(0,ay);ctx.lineTo(W,ay);ctx.moveTo(ax,0);ctx.lineTo(ax,H);ctx.stroke();
+ctx.fillStyle=css('--mut');ctx.textAlign='center';
+for(let x=Math.ceil(xa/st)*st;x<=xb;x+=st){if(Math.abs(x)<st/2)continue;ctx.fillText(+x.toFixed(6),X(x),Math.min(ay+15,H-6))}
+ctx.textAlign='right';for(let y=Math.ceil(ya/st)*st;y<=yb;y+=st){if(Math.abs(y)<st/2)continue;ctx.fillText(+y.toFixed(6),ax-5,Y(y)+4)}
+ctx.fillText('x',W-8,ay-6);ctx.textAlign='left';ctx.fillText('y',ax+6,14);
+const line=(s,x,y,col,dash)=>{if(!isFinite(s))return;ctx.strokeStyle=col;ctx.lineWidth=2.2;ctx.setLineDash(dash||[]);ctx.beginPath();ctx.moveTo(X(xa),Y(y+s*(xa-x)));ctx.lineTo(X(xb),Y(y+s*(xb-x)));ctx.stroke();ctx.setLineDash([])};
+if(isFinite(y0)&&isFinite(d))line(d,x0,y0,css('--c3'),[8,6]);
+if(isFinite(m)&&isFinite(y0))line(m,x0,y0,css('--c2'));
+ctx.strokeStyle=css('--ac');ctx.lineWidth=3;ctx.beginPath();let pen=false,py=0;
+for(let i=0;i<=900;i++){const x=xa+(xb-xa)*i/900,y=g(x);if(!isFinite(y)||(pen&&Math.abs(y-py)>(yb-ya)*1.5)){pen=false;py=y;continue}pen?ctx.lineTo(X(x),Y(y)):ctx.moveTo(X(x),Y(y));pen=true;py=y}
+ctx.stroke();
+/* penanda rentang slider */
+ctx.strokeStyle=css('--axis');ctx.lineWidth=1;ctx.setLineDash([3,4]);[x0-R,x0+R].forEach(x=>{ctx.beginPath();ctx.moveTo(X(x),0);ctx.lineTo(X(x),H);ctx.stroke()});ctx.setLineDash([]);
+const dot=(x,y,col,t)=>{if(!isFinite(y))return;ctx.fillStyle=col;ctx.beginPath();ctx.arc(X(x),Y(y),6,0,7);ctx.fill();ctx.strokeStyle=css('--card');ctx.lineWidth=2;ctx.stroke();ctx.fillStyle=css('--tx');ctx.font='bold 13px system-ui';ctx.textAlign='left';ctx.fillText(t,X(x)+10,Y(y)-10)};
+if(h!==0)dot(x1,y1,css('--c2'),'Q');dot(x0,y0,css('--ac'),'P')}
+['fx','x0','h','pn'].forEach(i=>$(i).addEventListener('input',draw));
+const zm=k=>{zoom=Math.min(10,Math.max(.15,zoom*k));draw()};
+$('zi').onclick=()=>zm(1.25);$('zo').onclick=()=>zm(1/1.25);
+$('rs').onclick=()=>{zoom=1;panY=0;$('pn').value=0;draw()};
+cv.addEventListener('wheel',e=>{e.preventDefault();zm(e.deltaY<0?1.1:1/1.1)},{passive:false});
+let drag=null;
+cv.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY};cv.setPointerCapture(e.pointerId);cv.style.cursor='grabbing'});
+cv.addEventListener('pointermove',e=>{if(!drag)return;const sc=cv._sc||1,dx=(e.clientX-drag.x)/sc,dy=(e.clientY-drag.y)/sc;drag={x:e.clientX,y:e.clientY};
+const pn=$('pn');pn.value=Math.min(6,Math.max(-6,(parseFloat(pn.value)||0)-dx));panY+=dy;draw()});
+['pointerup','pointercancel'].forEach(t=>cv.addEventListener(t,()=>{drag=null;cv.style.cursor='grab'}));
+new ResizeObserver(draw).observe(cv);draw();
+</script></body></html>
